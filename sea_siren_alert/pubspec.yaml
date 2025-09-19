@@ -1,37 +1,39 @@
 name: sea_siren_alert
-description: App to prevent border crossings for Tamil Nadu fishermen.
+description: App to prevent border crossings for Tamil fishermen.
 
+publish_to: 'none'  # Remove if publishing
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: '>=3.0.0 <4.0.0'  # Updated for 2025 Flutter versions
 
 dependencies:
   flutter:
     sdk: flutter
-
-  # Storage
+  flutter_map: ^6.0.0
+  geolocator: ^10.0.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  path_provider: ^2.1.5
-
-  # Location & Maps
-  geolocator: ^12.0.0
-  latlong2: ^0.8.2
-  flutter_local_notifications: ^17.2.3
-  flutter_tts: ^4.0.2
+  flutter_local_notifications: ^15.0.0
+  flutter_tts: ^3.7.0
   telephony: ^0.2.0
-  encrypt: ^5.0.3
-  tflite_flutter: ^0.10.4   # For TensorFlow Lite
+  encrypt: ^5.0.1
+  path_provider: ^2.0.15
+  tflite_flutter: ^0.10.0
+  latlong2: ^0.9.0
+  cupertino_icons: ^1.0.2  # For icons
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  hive_generator: ^2.0.1
+  hive_generator: ^2.0.0
   build_runner: ^2.4.6
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/logo.png
-    - assets/models/trajectory_model.tflite
+    - assets/models/
+    - assets/offline_tiles/
+    - assets/sounds/
