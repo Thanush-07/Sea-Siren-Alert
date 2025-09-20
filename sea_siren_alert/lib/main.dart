@@ -1,37 +1,35 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import './models/user_model.dart';
-import './screens/registration_screen.dart';
-import './screens/home_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/user_model.dart';
+import 'models/log_model.dart';
+import 'screens/splash_screen.dart';
+import 'services/sms_service.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  _SplashScreenState createState() => _SplashScreenState();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Hive.initFlutter();
+    Hive.registerAdapter(UserModelAdapter());
+    Hive.registerAdapter(LogModelAdapter());
+    await Hive.openBox('userBox');
+    await Hive.openBox('smsQueue');
+    await Hive.openBox('logBox');
+    await SmsService.init();
+  } catch (e) {
+    print('Initialization error: $e');
+  }
+  runApp(const MyApp());
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Timer(const Duration(seconds: 3), () {
-      var userBox = Hive.box('userBox');
-      if (userBox.get('user') == null) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RegistrationScreen()));
-      } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-      }
-    });
-  }
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Image.asset('assets/images/logo.png'),  // Add placeholder if missing
-      ),
+    return MaterialApp(
+      title: 'Sea Siren Alert',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const SplashScreen(),
     );
   }
 }
