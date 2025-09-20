@@ -14,7 +14,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   String _name = '';
   String _phone = '';
-  String _language = 'Tamil';  // Default for Tamil people
+  String _language = 'Tamil';
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +43,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 onChanged: (val) => setState(() => _language = val!),
                 decoration: const InputDecoration(labelText: 'எச்சரிக்கை மொழி / Language for Alerts'),
               ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {

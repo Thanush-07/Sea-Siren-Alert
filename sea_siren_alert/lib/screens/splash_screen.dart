@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../models/user_model.dart';
 import 'registration_screen.dart';
 import 'home_screen.dart';
 
@@ -16,12 +15,17 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
-      var userBox = Hive.box('userBox');
-      if (userBox.get('user') == null) {
+    Timer(const Duration(seconds: 3), () async {
+      try {
+        var userBox = Hive.box('userBox');
+        if (userBox.get('user') == null) {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RegistrationScreen()));
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        }
+      } catch (e) {
+        print('Splash error: $e');
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RegistrationScreen()));
-      } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
       }
     });
   }
@@ -30,7 +34,18 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Image.asset('assets/images/logo.png'),  // Add placeholder if missing
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              width: 100,
+              height: 100,
+              errorBuilder: (_, __, ___) => const Text('SEA SIREN ALERT'),
+            ),
+            const Text('SEA SIREN ALERT', style: TextStyle(fontSize: 24)),
+          ],
+        ),
       ),
     );
   }
