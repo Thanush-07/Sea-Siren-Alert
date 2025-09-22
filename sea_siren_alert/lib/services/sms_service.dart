@@ -1,28 +1,82 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:encrypt/encrypt.dart' as encrypt;
-import '../models/log_model.dart';
+import 'package:latlong2/latlong.dart';
+import '../constants.dart';
 
-class LogService {
-  static final key = encrypt.Key.fromLength(32);
-  static final iv = encrypt.IV.fromLength(16);
-  static final encrypter = encrypt.Encrypter(encrypt.AES(key));
+class SmsService {
+  static bool _isInitialized = false;
 
-  static Future<void> logEvent(String event, String data) async {
+  static Future<void> init() async {
     try {
-      final encryptedData = encrypter.encrypt(data, iv: iv).base64;
-      final log = LogModel(
-        timestamp: DateTime.now().toIso8601String(),
-        event: event,
-        encryptedData: encryptedData,
-      );
-      final box = Hive.box('logBox');
-      await box.add(log);
+      // Initialize SMS service
+      _isInitialized = true;
+      print('SMS Service initialized');
     } catch (e) {
-      print('Log error: $e');
+      print('SMS Service initialization error: $e');
     }
   }
 
-  static Future<void> syncLogs() async {
-    print('Syncing logs...');
+  static Future<void> sendToCoastGuard(BuildContext context, LatLng position) async {
+    try {
+      if (!_isInitialized) {
+        await init();
+      }
+
+      final message = 'EMERGENCY: Fishing vessel in distress at coordinates: '
+          'Latitude ${position.latitude.toStringAsFixed(6)}, '
+          'Longitude ${position.longitude.toStringAsFixed(6)}. '
+          'Immediate assistance required.';
+
+      // Queue the SMS for sending
+      final box = Hive.box('smsQueue');
+      await box.add({
+        'number': coastGuardNumber,
+        'message': message,
+        'timestamp': DateTime.now().toIso8601String(),
+        'sent': false,
+      });
+
+      // Show confirmation to user
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Emergency SMS queued for Coast Guard'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      print('Emergency SMS queued: $message');
+    } catch (e) {
+      print('SMS sending error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to send emergency SMS'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  static Future<void> processSmsQueue() async {
+    try {
+      final box = Hive.box('smsQueue');
+      final unsentMessages = box.values.where((msg) => !msg['sent']).toList();
+      
+      for (var message in unsentMessages) {
+        // In a real implementation, you would use a package like telephony
+        // to actually send SMS messages
+        print('Sending SMS to ${message['number']}: ${message['message']}');
+        
+        // Mark as sent
+        final index = box.values.toList().indexOf(message);
+        message['sent'] = true;
+        await box.putAt(index, message);
+      }
+    } catch (e) {
+      print('SMS queue processing error: $e');
+    }
   }
 }
