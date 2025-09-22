@@ -6,7 +6,6 @@ const double alert5km = 5000; // Meters
 const double alert2km = 2000;
 const double alert500m = 500;
 
-// Approx IMBL polygon for testing
 final List<LatLng> borderPolygon = [
   LatLng(8.5, 78.0),
   LatLng(8.0, 78.5),
