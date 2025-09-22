@@ -21,7 +21,6 @@ class GpsService {
   }
 
   static Stream<LatLng> getPositionStream() {
-    // Simulate GPS for local testing
     return Stream.periodic(const Duration(seconds: 5), (count) {
       double lat = 8.5 - (count * 0.05);
       double lng = 78.0 + (count * 0.05);
