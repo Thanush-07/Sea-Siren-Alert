@@ -1,1 +1,1 @@
-const String kHiveBox = "fisherman_box";
+const String kHiveBox = 'fisherman_box';
