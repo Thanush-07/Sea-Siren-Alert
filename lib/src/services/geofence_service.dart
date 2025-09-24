@@ -15,12 +15,12 @@ Future<void> checkProximity(double lat, double lon) async {
   final player = AudioPlayer();
   if (distance < 500) {
     Vibration.vibrate(duration: 5000, amplitude: 255);  // Critical
-    await player.play(AssetSource('audio/critical_alert.mp3'));  // Tamil: "எல்லை அருகில்!"
+    await player.play(AssetSource('audio/alert_1km.mp3'));  // Tamil: "எல்லை அருகில்!"
   } else if (distance < 2000) {
     Vibration.vibrate(duration: 2000);  // Urgent
-    await player.play(AssetSource('audio/urgent_alert.mp3'));  // Tamil: "எச்சரிக்கை!"
+    await player.play(AssetSource('audio/alert_500m.mp3'));  // Tamil: "எச்சரிக்கை!"
   } else if (distance < 5000) {
     Vibration.vibrate(duration: 1000);  // Gentle
-    await player.play(AssetSource('audio/gentle_alert.mp3'));  // Tamil: "கவனம்!"
+    await player.play(AssetSource('audio/alert_3km.mp3'));  // Tamil: "கவனம்!"
   }
 }
