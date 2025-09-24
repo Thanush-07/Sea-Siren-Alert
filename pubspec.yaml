@@ -23,6 +23,12 @@ dependencies:
   vibration: ^3.1.4
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
+  flutter_secure_storage: ^9.2.2
+  image_picker: ^1.0.0 # optional for securing PIN
+  url_launcher: ^6.3.2
+  another_telephony: ^0.4.1
+  flutter_tts: ^4.2.3
+  flutter_map_tile_caching: ^10.1.1
 
 dev_dependencies:
   flutter_test:
