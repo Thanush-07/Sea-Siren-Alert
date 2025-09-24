@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../services/geofence_service.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class OfflineMapScreen extends StatefulWidget {
   const OfflineMapScreen({super.key});
@@ -10,49 +10,36 @@ class OfflineMapScreen extends StatefulWidget {
 }
 
 class _OfflineMapScreenState extends State<OfflineMapScreen> {
-  GoogleMapController? _controller;
-  Set<Marker> _markers = {};
+  final MapController _mapController = MapController();
 
-  static const CameraPosition _initialPosition = CameraPosition(
-    target: LatLng(9.415, 79.695),
-    zoom: 9.0,
-  );
+  static const LatLng _initialCenter = LatLng(9.415, 79.695);
+  static const double _initialZoom = 9.0;
 
-  @override
-  void initState() {
-    super.initState();
-    initGeofence();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadMarkers());
-  }
+  final List<Marker> _markers = [
+    Marker(
+      point: const LatLng(8.817, 79.848),
+      width: 60,
+      height: 60,
+      child: Column(
+        children: const [
+          Icon(Icons.directions_boat, color: Colors.red, size: 15),
+          Text('எல்லை எச்சரிக்கை', style: TextStyle(fontSize: 8)),
+        ],
+      ),
+    ),
+  ];
 
-  Future<void> _loadMarkers() async {
-    final imgConfig = createLocalImageConfiguration(context); // no fixed Size to avoid stretching
-    final redMarkerIcon = await BitmapDescriptor.asset(
-      imgConfig,
-      'assets/images/boat-map-marker.png',
-      width: 48, // or height: 48; set only one dimension
-    );
-
-    setState(() {
-      _markers = {
-        Marker(
-          markerId: const MarkerId('border_warning'),
-          position: const LatLng(8.817, 79.848),
-          infoWindow: const InfoWindow(title: 'எல்லை எச்சரிக்கை'),
-          icon: redMarkerIcon,
-        ),
-      };
-    });
-  }
-
-  void _prepareOfflineMap() async {
-    if (_controller == null) return;
+  void _prepareOfflineMap() {
     final bounds = LatLngBounds(
-      southwest: const LatLng(8.0, 76.0),
-      northeast: const LatLng(13.0, 80.0),
+      const LatLng(8.0, 76.0),
+      const LatLng(13.0, 80.0),
     );
-    await _controller!.animateCamera(
-      CameraUpdate.newLatLngBounds(bounds, 50),
+
+    _mapController.fitCamera(
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(50),
+      ),
     );
   }
 
@@ -60,7 +47,7 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('கடல் வரைபடம் (கூகுள்)'),
+        title: const Text('கடல் வரைபடம் (OSM - Free)'),
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
@@ -69,13 +56,19 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
           ),
         ],
       ),
-      body: GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: _initialPosition,
-        onMapCreated: (c) => _controller = c,
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
-        markers: _markers,
+      body: FlutterMap(
+        mapController: _mapController,
+        options: const MapOptions(
+          initialCenter: _initialCenter,
+          initialZoom: _initialZoom,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            userAgentPackageName: 'com.example.sea_siren_alert',
+          ),
+          MarkerLayer(markers: _markers),
+        ],
       ),
     );
   }
