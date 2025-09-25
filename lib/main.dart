@@ -11,6 +11,7 @@ import 'src/screens/home.dart';
 import 'src/screens/map.dart';
 import 'src/screens/weather.dart';
 import 'src/screens/profile.dart';
+import 'src/widgets/recent_alerts.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         '/map': (context) => const OfflineMapScreen(),
         '/weather': (context) => const WeatherAlertScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/recent_alerts': (context) => const TamilWeatherAlertsPage(),
       },
     );
   }
