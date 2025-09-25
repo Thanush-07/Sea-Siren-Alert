@@ -6,7 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:hive/hive.dart';
 import '../widgets/border_alert.dart';
-import '../widgets/recent_alerts.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

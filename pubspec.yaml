@@ -38,6 +38,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/audio/
+    - assets/images/app_logo.png
+    - assets/audio/alert_3km.mp3
+    - assets/audio/alert_1km.mp3
+    - assets/audio/alert_500m.mp3
 flutter_localizations: 
  sdk: flutter

@@ -26,12 +26,12 @@ class BorderAlert {
     }
   }
 
-  // IMPORTANT: AssetSource should be relative to the assets/ prefix declared in pubspec
+  // IMPORTANT: path is relative to assets/ prefix in pubspec; do NOT include "assets/"
   static String tone(BorderAlertLevel level) {
     switch (level) {
-      case BorderAlertLevel.km3: return 'assets/audio/alert_1km.mp3';
-      case BorderAlertLevel.km1: return 'assets/audio/alert_3km.wav';
-      case BorderAlertLevel.m500: return 'assets/audio/alert_500m.mp3';
+      case BorderAlertLevel.km3:  return 'audio/alert_3km.mp3';
+      case BorderAlertLevel.km1:  return 'audio/alert_1km.mp3';
+      case BorderAlertLevel.m500: return 'audio/alert_500m.mp3';
     }
   }
 
@@ -39,16 +39,16 @@ class BorderAlert {
     if (_showing) return;
     _showing = true;
 
-    // Capture navigator before any await to avoid using context across async gaps
+    // capture a local navigator for safe use after awaits
     final nav = Navigator.of(context);
 
     try {
-      // Play tone (no UI context needed)
       await _player.stop();
       await _player.play(AssetSource(tone(level)));
-    } catch (_) {}
+    } catch (_) {
+      // optionally log
+    }
 
-    // Guard: context could be unmounted while awaiting
     if (!context.mounted) {
       _showing = false;
       return;
@@ -90,8 +90,7 @@ class BorderAlert {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 28, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
                       ),
                       onPressed: () async {
                         try { await _player.stop(); } catch (_) {}

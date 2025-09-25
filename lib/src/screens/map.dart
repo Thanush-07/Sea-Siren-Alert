@@ -22,14 +22,12 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
   static const LatLng _initialCenter = LatLng(9.415, 79.695);
   static const double _initialZoom = 9.0;
 
-  // Single reference border point for demo (replace with polyline logic if needed)
   static const LatLng _borderPoint = LatLng(9.066, 79.553);
-
   LatLng? _boatPos;
 
   void _onTapMap(TapPosition tapPos, LatLng latlng) async {
     setState(() => _boatPos = latlng);
-    await _applyAlerts(); // compute and show full-screen alert if within thresholds
+    await _applyAlerts();
   }
 
   double _distanceMeters(LatLng a, LatLng b) {
@@ -56,6 +54,21 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
     return LatLngBounds(LatLng(south, west), LatLng(north, east));
   }
 
+  LatLng _pointAtDistanceFromBorder(double meters, {double bearingDeg = 90}) {
+    const earthR = 6371000.0;
+    final br = bearingDeg * math.pi / 180.0;
+    final lat1 = _borderPoint.latitude * math.pi / 180.0;
+    final lon1 = _borderPoint.longitude * math.pi / 180.0;
+    final ang = meters / earthR;
+    final lat2 = math.asin(math.sin(lat1) * math.cos(ang) + math.cos(lat1) * math.sin(ang) * math.cos(br));
+    final lon2 = lon1 +
+        math.atan2(
+          math.sin(br) * math.sin(ang) * math.cos(lat1),
+          math.cos(ang) - math.sin(lat1) * math.sin(lat2),
+        );
+    return LatLng(lat2 * 180.0 / math.pi, lon2 * 180.0 / math.pi);
+  }
+
   void _fitBorderAndBoat() {
     if (!mounted) return;
     if (_boatPos == null) {
@@ -72,27 +85,8 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
     _mapController.move(fitted.center, fitted.zoom);
   }
 
-  // Place a temporary boat at a specific radius from border if none exists
-  LatLng _pointAtDistanceFromBorder(double meters, {double bearingDeg = 90}) {
-    // Simple equirectangular step (ok for a few km)
-    const earthR = 6371000.0;
-    final br = bearingDeg * math.pi / 180.0;
-    final lat1 = _borderPoint.latitude * math.pi / 180.0;
-    final lon1 = _borderPoint.longitude * math.pi / 180.0;
-    final ang = meters / earthR;
-    final lat2 = math.asin(math.sin(lat1) * math.cos(ang) + math.cos(lat1) * math.sin(ang) * math.cos(br));
-    final lon2 = lon1 +
-        math.atan2(
-          math.sin(br) * math.sin(ang) * math.cos(lat1),
-          math.cos(ang) - math.sin(lat1) * math.sin(lat2),
-        );
-    return LatLng(lat2 * 180.0 / math.pi, lon2 * 180.0 / math.pi);
-  }
-
   Future<void> _showLevel(BorderAlertLevel level) async {
-    // Ensure a visible boat position for the demo
     if (_boatPos == null) {
-      // Place boat at requested ring from border to visualize context
       if (level == BorderAlertLevel.km3) {
         _boatPos = _pointAtDistanceFromBorder(3000);
       } else if (level == BorderAlertLevel.km1) {
@@ -102,11 +96,7 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
       }
       setState(() {});
     }
-
-    // Show full-screen alert with tone
     await BorderAlert.show(context, level);
-
-    // Fit map so both markers are visible
     _fitBorderAndBoat();
   }
 
@@ -172,39 +162,31 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
                 ),
             ],
           ),
-
-          // NEW: Quick Alert Level bar
           Positioned(
             right: 12,
-            bottom: 84, // above any bottom nav/padding
-            child: Container
-              (
+            bottom: 84,
+            child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 3))
-                ],
+                boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 3))],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 3 km
                   ActionChip(
                     avatar: const Icon(Icons.circle, color: Colors.amber, size: 14),
                     label: const Text('3 கி.மீ'),
                     onPressed: () => _showLevel(BorderAlertLevel.km3),
                   ),
                   const SizedBox(width: 8),
-                  // 1 km
                   ActionChip(
                     avatar: const Icon(Icons.circle, color: Colors.deepOrange, size: 14),
                     label: const Text('1 கி.மீ'),
                     onPressed: () => _showLevel(BorderAlertLevel.km1),
                   ),
                   const SizedBox(width: 8),
-                  // 500 m
                   ActionChip(
                     avatar: const Icon(Icons.circle, color: Colors.red, size: 14),
                     label: const Text('500 மீ'),
@@ -216,8 +198,6 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
           ),
         ],
       ),
-
-      // Keep the judges FAB if desired (can be removed; this is optional now)
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await _applyAlerts();
@@ -229,7 +209,6 @@ class _OfflineMapScreenState extends State<OfflineMapScreen> {
         label: const Text('எச்சரிக்கைகள் காண்க'),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
       bottomNavigationBar: _boatPos == null
           ? const SizedBox.shrink()
           : Padding(
