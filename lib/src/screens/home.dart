@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:hive/hive.dart';
 import '../widgets/border_alert.dart';
+import '../widgets/recent_alerts.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -439,8 +440,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       _quickTile(
                         icon: Icons.notifications_active_outlined,
-                        titleTa: '     சமீபத்திய     .             எச்சரிக்கைகள்',
-                        onTap: () => Navigator.of(context).pushNamed('/weather'),
+                        titleTa: '              சமீபத்திய                       .         எச்சரிக்கைகள்',
+                        onTap: () => Navigator.of(context).pushNamed('/recent_alerts'),
                         bg: const Color(0xFFFFF8E6),
                         fg: const Color(0xFFB77900),
                       ),
