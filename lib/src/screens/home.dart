@@ -7,7 +7,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:hive/hive.dart';
 import '../widgets/border_alert.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -33,6 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Position? _lastPos;        // live GPS
   double? _lastBorderMeters; // live distance to border
 
+  // STATIC weather snapshot for the Home header (no API/Hive dependency here)
+  static const String kWindKts = '12.5';   // knots
+  static const String kWindDir = 'SW';     // direction short label
+  static const String kTideM = '1.8';      // meters
+  static const String kTideTrend = 'Rising';
+
   @override
   void initState() {
     super.initState();
@@ -43,13 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _posSub?.cancel();
     super.dispose();
-  }
-
-  Map<String, dynamic> _readWeatherMap() {
-    final box = Hive.box('fisherman_box');
-    final raw = box.get('weather');
-    if (raw is Map) return Map<String, dynamic>.from(raw);
-    return <String, dynamic>{};
   }
 
   void _startBorderStream() async {
@@ -218,12 +216,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Weather values
-    final w = _readWeatherMap();
-    final windKts = (w['wind_speed_kts'] ?? w['windKts'] ?? '—').toString();
-    final windDir = (w['wind_dir_text'] ?? w['windDir'] ?? '—').toString();
-    final tideM = (w['tide_height_m'] ?? w['tideM'] ?? '—').toString();
-    final tideTrend = (w['tide_trend'] ?? w['tideTrend'] ?? '—').toString();
+    // Static weather values for Home header
+    const windKts = kWindKts;
+    const windDir = kWindDir;
+    const tideM = kTideM;
+    const tideTrend = kTideTrend;
 
     final pct = (_totalTiles == null || _totalTiles == 0)
         ? null
@@ -239,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
       borderText = 'எல்லைக்கு தூரம்: ${(_lastBorderMeters! / 1000).toStringAsFixed(2)} கி.மீ';
     }
 
-    // Drawer header values
+    // Drawer header values (from Hive)
     final box = Hive.box('fisherman_box');
     final user = (box.get('user') as Map?) ?? {};
     final fishermanName = (user['name'] ?? 'மீனவர்').toString();
@@ -273,8 +270,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: UserAccountsDrawerHeader(
                 decoration: const BoxDecoration(color: Colors.transparent),
-                accountName: Text(fishermanName),           // from Hive
-                accountEmail: Text('படகு எண்: $boatNo'),     // from Hive
+                accountName: Text(fishermanName),
+                accountEmail: Text('படகு எண்: $boatNo'),
                 currentAccountPicture: const CircleAvatar(
                   backgroundColor: Colors.white,
                   child: Icon(Icons.person, color: Colors.blue),
@@ -300,8 +297,6 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const Divider(),
-
-            // NEW: About the app (Tamil)
             AboutListTile(
               icon: const Icon(Icons.info_outline),
               child: const Text('இந்த செயலி பற்றி'),
@@ -336,7 +331,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('வெளியேறு'),
@@ -369,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Weather stats
+            // Weather stats (STATIC)
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -440,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       _quickTile(
                         icon: Icons.notifications_active_outlined,
-                        titleTa: '              சமீபத்திய                       .         எச்சரிக்கைகள்',
+                        titleTa: '              சமீபத்திய           .          .         எச்சரிக்கைகள்',
                         onTap: () => Navigator.of(context).pushNamed('/recent_alerts'),
                         bg: const Color(0xFFFFF8E6),
                         fg: const Color(0xFFB77900),

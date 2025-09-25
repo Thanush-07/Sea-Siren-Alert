@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -6,6 +7,25 @@ enum BorderAlertLevel { km3, km1, m500 }
 class BorderAlert {
   static bool _showing = false;
   static final AudioPlayer _player = AudioPlayer();
+
+  // FIX: path relative to assets/ (remove "assets/" prefix)
+  static const String _siren = 'audio/alert.mp3';
+
+  static String _tone(BorderAlertLevel level) {
+    switch (level) {
+      case BorderAlertLevel.km3:  return 'audio/alert_3km.mp3';
+      case BorderAlertLevel.km1:  return 'audio/alert_1km.mp3';
+      case BorderAlertLevel.m500: return 'audio/alert_500m.mp3';
+    }
+  }
+
+  static List<String> _sequence(BorderAlertLevel level) {
+    switch (level) {
+      case BorderAlertLevel.km3:  return [_siren, _tone(level), _tone(level)];
+      case BorderAlertLevel.km1:  return [_siren, _tone(level), _tone(level), _tone(level)];
+      case BorderAlertLevel.m500: return [_siren, _siren, _tone(level), _tone(level), _tone(level), _tone(level)];
+    }
+  }
 
   static Color color(BorderAlertLevel level) {
     switch (level) {
@@ -26,12 +46,23 @@ class BorderAlert {
     }
   }
 
-  // IMPORTANT: path is relative to assets/ prefix in pubspec; do NOT include "assets/"
-  static String tone(BorderAlertLevel level) {
-    switch (level) {
-      case BorderAlertLevel.km3:  return 'audio/alert_3km.mp3';
-      case BorderAlertLevel.km1:  return 'audio/alert_1km.mp3';
-      case BorderAlertLevel.m500: return 'audio/alert_500m.mp3';
+  static Future<void> _playSequence(List<String> assets, {Duration gap = const Duration(milliseconds: 120)}) async {
+    for (final a in assets) {
+      await _player.stop();
+      final completer = Completer<void>();
+      late final StreamSubscription sub;
+      sub = _player.onPlayerComplete.listen((_) {
+        if (!completer.isCompleted) completer.complete();
+        sub.cancel();
+      });
+      try {
+        await _player.play(AssetSource(a));
+      } catch (_) {
+        try { await sub.cancel(); } catch (_) {}
+        continue;
+      }
+      await completer.future.timeout(const Duration(seconds: 10), onTimeout: () {});
+      if (gap > Duration.zero) await Future.delayed(gap);
     }
   }
 
@@ -39,20 +70,9 @@ class BorderAlert {
     if (_showing) return;
     _showing = true;
 
-    // capture a local navigator for safe use after awaits
-    final nav = Navigator.of(context);
+    unawaited(_playSequence(_sequence(level))); // siren first, then tone(s)
 
-    try {
-      await _player.stop();
-      await _player.play(AssetSource(tone(level)));
-    } catch (_) {
-      // optionally log
-    }
-
-    if (!context.mounted) {
-      _showing = false;
-      return;
-    }
+    if (!context.mounted) { _showing = false; return; }
 
     await showGeneralDialog(
       context: context,
@@ -68,23 +88,12 @@ class BorderAlert {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      level == BorderAlertLevel.m500
-                          ? Icons.emergency
-                          : Icons.warning_amber_rounded,
-                      size: 88,
-                      color: Colors.white,
-                    ),
+                    Icon(level == BorderAlertLevel.m500 ? Icons.emergency : Icons.warning_amber_rounded,
+                        size: 88, color: Colors.white),
                     const SizedBox(height: 16),
-                    Text(
-                      message(level),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text(message(level),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 22, color: Colors.white, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -94,9 +103,7 @@ class BorderAlert {
                       ),
                       onPressed: () async {
                         try { await _player.stop(); } catch (_) {}
-                        if (ctx.mounted) {
-                          Navigator.of(ctx).pop();
-                        }
+                        if (ctx.mounted) Navigator.of(ctx).pop();
                       },
                       child: const Text('சரி (OK)'),
                     ),
